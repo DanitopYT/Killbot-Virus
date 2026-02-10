@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CRITICAL_SYSTEM_ERROR</title>
+    <title>SYSTEM_LOCK_ACTIVE</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             background-color: #000; color: #f00; 
-            font-family: 'Courier New', Courier, monospace; 
-            overflow: hidden; user-select: none;
+            font-family: 'Courier New', monospace; 
+            overflow: hidden; user-select: none; touch-action: none;
         }
 
-        /* Interfaz de Descarga Inicial */
+        /* Pantalla de Inicio */
         #setup-screen {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; background: #1a1a1a;
+            height: 100%; background: #0a0a0a; z-index: 10; position: relative;
         }
 
         .window {
@@ -24,61 +24,46 @@
             background: #c0c0c0; border: 3px solid #fff;
             border-right-color: #555; border-bottom-color: #555;
             color: #000; padding: 2px;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
         }
 
-        .title-bar {
-            background: #000080; color: #fff; padding: 5px;
-            font-size: 14px; font-weight: bold; display: flex; justify-content: space-between;
-        }
-
-        .content { padding: 25px; text-align: center; }
+        .title-bar { background: #000080; color: #fff; padding: 5px; font-weight: bold; display: flex; justify-content: space-between; }
 
         .btn {
-            background: #c0c0c0; border: 2px solid #fff;
-            border-right-color: #555; border-bottom-color: #555;
-            padding: 12px 25px; cursor: pointer; font-weight: bold;
-            font-family: inherit; margin-top: 15px; width: 100%;
+            background: #c0c0c0; border: 2px solid #fff; border-right-color: #555; border-bottom-color: #555;
+            padding: 15px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px;
         }
 
-        /* Capa de Caos (0:15) */
+        /* Capa Killbot Inescapable */
         #kiosk-mode {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #f00; display: none; z-index: 9999;
-            cursor: none; touch-action: none;
+            background-color: #f00; display: none; z-index: 99999;
+            cursor: none;
         }
 
         .glitch-text {
-            position: absolute; font-size: 10vw; font-weight: 900;
-            color: white; text-shadow: 4px 4px #000;
-            pointer-events: none; white-space: nowrap;
+            position: absolute; font-size: 12vw; font-weight: 900;
+            color: white; text-shadow: 5px 5px #000; pointer-events: none;
             animation: shake 0.05s infinite;
         }
 
-        #log {
-            position: absolute; bottom: 10px; left: 10px;
-            font-size: 11px; color: #fff; pointer-events: none;
-            background: rgba(0,0,0,0.3); padding: 5px;
-        }
+        #log { position: absolute; bottom: 0; left: 0; font-size: 10px; color: #fff; pointer-events: none; padding: 10px; }
 
         @keyframes shake {
-            0% { transform: translate(3px, -3px) rotate(1deg); }
-            50% { transform: translate(-3px, 3px) rotate(-1deg); }
+            0% { transform: translate(5px, -5px); }
+            50% { transform: translate(-5px, 5px); }
             100% { transform: translate(0, 0); }
         }
-
-        .hidden { display: none; }
     </style>
 </head>
-<body>
+<body onclick="forceKiosk()">
 
     <div id="setup-screen">
         <div class="window">
-            <div class="title-bar"><span>Killbot.exe Installer</span><span>[X]</span></div>
-            <div class="content" id="win-content">
-                <p style="font-weight: bold;">ADVERTENCIA DEL SISTEMA</p>
-                <p>Se requiere una actualización crítica para continuar.</p>
-                <button class="btn" id="start-btn">INSTALAR Y EJECUTAR</button>
+            <div class="title-bar"><span>SECURITY_CHECK.EXE</span><span>[X]</span></div>
+            <div class="content" id="win-content" style="padding:20px; text-align:center;">
+                <p><b>ERROR CRÍTICO DETECTADO</b></p>
+                <p>El sistema requiere reparación inmediata para evitar la pérdida de datos.</p>
+                <button class="btn" id="start-btn">REPARAR AHORA</button>
             </div>
         </div>
     </div>
@@ -87,91 +72,79 @@
         <div id="log"></div>
     </div>
 
-    <audio id="killbot-audio" preload="auto">
+    <audio id="killbot-audio" loop>
         <source src="https://cdn.discordapp.com/attachments/1375609945017290836/1470865995227857067/killbot.mp3?ex=698cda34&is=698b88b4&hm=69b6785fada5757221116c6e5b9f379146692506138fc6c4f3a7ae2a4ae7ece8&" type="audio/mpeg">
     </audio>
 
     <script>
         const startBtn = document.getElementById('start-btn');
-        const setup = document.getElementById('setup-screen');
-        const winContent = document.getElementById('win-content');
         const kiosk = document.getElementById('kiosk-mode');
         const audio = document.getElementById('killbot-audio');
         const log = document.getElementById('log');
+        let active = false;
 
-        const phrases = ["DELETING SYSTEM", "KILLBOT.EXE", "FATAL_ERROR", "0x000F61", "VULNERABILITY", "ACCESS_DENIED", "CRITICAL_FAILURE", "BYE BYE"];
+        function forceKiosk() {
+            if (!active) return;
+            const el = document.documentElement;
+            if (el.requestFullscreen) el.requestFullscreen();
+            if (document.body.requestPointerLock) document.body.requestPointerLock();
+        }
 
         startBtn.addEventListener('click', () => {
-            // Intentar Modo Kiosko / Fullscreen
-            if(document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            } else if(document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
+            active = true;
+            forceKiosk();
+            audio.play();
+
+            document.getElementById('win-content').innerHTML = "Intentando recuperar sectores dañados... <br> No apague el dispositivo.";
+            
+            // Llenar el historial para bloquear el botón de "Atrás" en Android
+            for(let i=0; i<50; i++) {
+                history.pushState({page: i}, "", "#virus_" + i);
             }
 
-            // Reproducir audio de Discord
-            audio.play().catch(e => alert("Toca la pantalla de nuevo para activar el audio"));
-
-            // 0:00 - 0:15: Descarga falsa
-            winContent.innerHTML = `
-                <p>Descargando paquetes de virus...</p>
-                <div style="width:100%; background:#888; border:1px solid #000; height:20px; margin: 10px 0;">
-                    <div id="bar" style="width:0%; height:100%; background:#000080;"></div>
-                </div>
-                <p id="perc" style="font-weight:bold;">0%</p>
-            `;
-
-            let p = 0;
-            const downloadInt = setInterval(() => {
-                p += 0.7;
-                const b = document.getElementById('bar');
-                if(b) b.style.width = p + "%";
-                const pc = document.getElementById('perc');
-                if(pc) pc.innerText = Math.floor(p) + "%";
-                if(p >= 100) clearInterval(downloadInt);
-            }, 100);
-
-            // 0:15: LA LOCURA
             setTimeout(() => {
-                setup.classList.add('hidden');
+                document.getElementById('setup-screen').style.display = 'none';
                 kiosk.style.display = 'block';
 
-                // Bucle de efectos rápidos
                 setInterval(() => {
-                    spawnText();
+                    spawnGlitch();
                     updateLog();
-                    // Flash Rojo/Negro
                     kiosk.style.backgroundColor = (Math.random() > 0.5) ? "#f00" : "#000";
-                    
-                    // Efecto de inversión de pantalla aleatorio
-                    if(Math.random() > 0.9) document.body.style.filter = "invert(1)";
+                    if(Math.random() > 0.95) document.body.style.filter = "invert(1)";
                     else document.body.style.filter = "none";
-                }, 45);
-
-            }, 15000); 
+                }, 40);
+            }, 15000);
         });
 
-        function spawnText() {
+        function spawnGlitch() {
             const t = document.createElement('div');
             t.className = 'glitch-text';
-            t.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-            t.style.left = Math.random() * 70 + "vw";
+            t.innerText = ["NO EXIT", "KILLBOT", "STAY", "ERROR", "NULL"][Math.floor(Math.random()*5)];
+            t.style.left = Math.random() * 80 + "vw";
             t.style.top = Math.random() * 80 + "vh";
-            t.style.color = (Math.random() > 0.5) ? "#fff" : "#ff0";
             kiosk.appendChild(t);
-            setTimeout(() => t.remove(), 350);
+            setTimeout(() => t.remove(), 300);
         }
 
         function updateLog() {
-            const line = document.createElement('div');
-            line.innerText = `> CORRUPTING_SECTOR_${Math.random().toString(16).toUpperCase().slice(2,10)}`;
-            log.appendChild(line);
-            if(log.childNodes.length > 25) log.removeChild(log.firstChild);
+            const l = document.createElement('div');
+            l.innerText = `OVERWRITING_MEMORY_ADDR_0x${Math.random().toString(16).slice(2,10)}`;
+            log.appendChild(l);
+            if(log.childNodes.length > 30) log.removeChild(log.firstChild);
         }
 
-        // Bloqueo botón atrás Android
-        window.history.pushState(null, null, location.href);
-        window.onpopstate = () => window.history.go(1);
+        // Bloqueos de teclado para Windows
+        window.addEventListener('keydown', (e) => {
+            if (active) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Anti-salida de pestaña
+        window.onbeforeunload = function() {
+            return "SISTEMA CORRUPTO. SI SALES, EL DISPOSITIVO QUEDARÁ INSERVIBLE.";
+        };
     </script>
 </body>
 </html>

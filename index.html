@@ -13,7 +13,7 @@
             overflow: hidden; user-select: none;
         }
 
-        /* Interfaz de Descarga (Windows Retro / Android Alert) */
+        /* Interfaz de Descarga Inicial */
         #setup-screen {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100%; background: #1a1a1a;
@@ -24,6 +24,7 @@
             background: #c0c0c0; border: 3px solid #fff;
             border-right-color: #555; border-bottom-color: #555;
             color: #000; padding: 2px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
         }
 
         .title-bar {
@@ -36,13 +37,11 @@
         .btn {
             background: #c0c0c0; border: 2px solid #fff;
             border-right-color: #555; border-bottom-color: #555;
-            padding: 10px 30px; cursor: pointer; font-weight: bold;
-            font-family: inherit; margin-top: 15px;
+            padding: 12px 25px; cursor: pointer; font-weight: bold;
+            font-family: inherit; margin-top: 15px; width: 100%;
         }
 
-        .btn:active { border: 2px solid #555; border-right-color: #fff; border-bottom-color: #fff; }
-
-        /* Capa de Caos Kiosko */
+        /* Capa de Caos (0:15) */
         #kiosk-mode {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: #f00; display: none; z-index: 9999;
@@ -50,20 +49,21 @@
         }
 
         .glitch-text {
-            position: absolute; font-size: 8vw; font-weight: 900;
+            position: absolute; font-size: 10vw; font-weight: 900;
             color: white; text-shadow: 4px 4px #000;
             pointer-events: none; white-space: nowrap;
-            animation: shake 0.1s infinite;
+            animation: shake 0.05s infinite;
         }
 
         #log {
             position: absolute; bottom: 10px; left: 10px;
-            font-size: 12px; color: #fff; pointer-events: none;
+            font-size: 11px; color: #fff; pointer-events: none;
+            background: rgba(0,0,0,0.3); padding: 5px;
         }
 
         @keyframes shake {
-            0% { transform: translate(2px, -2px); }
-            50% { transform: translate(-2px, 2px); }
+            0% { transform: translate(3px, -3px) rotate(1deg); }
+            50% { transform: translate(-3px, 3px) rotate(-1deg); }
             100% { transform: translate(0, 0); }
         }
 
@@ -73,12 +73,12 @@
 <body>
 
     <div id="setup-screen">
-        <div class="window" id="win">
-            <div class="title-bar"><span>Killbot_Installer.exe</span><span>[X]</span></div>
+        <div class="window">
+            <div class="title-bar"><span>Killbot.exe Installer</span><span>[X]</span></div>
             <div class="content" id="win-content">
-                <p style="font-weight: bold;">System requires an update.</p>
-                <p>Execute Killbot.exe to fix registries?</p>
-                <button class="btn" id="start-btn">RUN AS ADMIN</button>
+                <p style="font-weight: bold;">ADVERTENCIA DEL SISTEMA</p>
+                <p>Se requiere una actualización crítica para continuar.</p>
+                <button class="btn" id="start-btn">INSTALAR Y EJECUTAR</button>
             </div>
         </div>
     </div>
@@ -88,7 +88,7 @@
     </div>
 
     <audio id="killbot-audio" preload="auto">
-        <source src="Killbot.mp3" type="audio/mpeg">
+        <source src="https://cdn.discordapp.com/attachments/1375609945017290836/1470865995227857067/killbot.mp3?ex=698cda34&is=698b88b4&hm=69b6785fada5757221116c6e5b9f379146692506138fc6c4f3a7ae2a4ae7ece8&" type="audio/mpeg">
     </audio>
 
     <script>
@@ -99,79 +99,79 @@
         const audio = document.getElementById('killbot-audio');
         const log = document.getElementById('log');
 
-        const killPhrases = ["OVERRIDE", "DELETING...", "0x000101", "ACCESS_DENIED", "KILLBOT", "NULL_PTR", "FATAL_ERROR", "X_X"];
+        const phrases = ["DELETING SYSTEM", "KILLBOT.EXE", "FATAL_ERROR", "0x000F61", "VULNERABILITY", "ACCESS_DENIED", "CRITICAL_FAILURE", "BYE BYE"];
 
         startBtn.addEventListener('click', () => {
-            // 1. Activar Pantalla Completa (Modo Kiosko en Android/Windows)
-            launchFullScreen(document.documentElement);
-            
-            // 2. Bloquear puntero (PC)
-            if(document.body.requestPointerLock) document.body.requestPointerLock();
+            // Intentar Modo Kiosko / Fullscreen
+            if(document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if(document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            }
 
-            // 3. Iniciar audio
-            audio.play();
+            // Reproducir audio de Discord
+            audio.play().catch(e => alert("Toca la pantalla de nuevo para activar el audio"));
 
-            // 4. Simulación de descarga (0:00 - 0:15)
+            // 0:00 - 0:15: Descarga falsa
             winContent.innerHTML = `
-                <p>Downloading Virus...</p>
-                <div style="width:100%; background:#888; border:1px solid #000; height:15px;">
+                <p>Descargando paquetes de virus...</p>
+                <div style="width:100%; background:#888; border:1px solid #000; height:20px; margin: 10px 0;">
                     <div id="bar" style="width:0%; height:100%; background:#000080;"></div>
                 </div>
-                <p id="perc">0%</p>
+                <p id="perc" style="font-weight:bold;">0%</p>
             `;
 
             let p = 0;
-            const interval = setInterval(() => {
-                p += 0.8;
-                document.getElementById('bar').style.width = p + "%";
-                document.getElementById('perc').innerText = Math.floor(p) + "%";
-                if(p >= 100) clearInterval(interval);
+            const downloadInt = setInterval(() => {
+                p += 0.7;
+                const b = document.getElementById('bar');
+                if(b) b.style.width = p + "%";
+                const pc = document.getElementById('perc');
+                if(pc) pc.innerText = Math.floor(p) + "%";
+                if(p >= 100) clearInterval(downloadInt);
             }, 100);
 
-            // 5. LA LOCURA (Al segundo 15)
+            // 0:15: LA LOCURA
             setTimeout(() => {
                 setup.classList.add('hidden');
                 kiosk.style.display = 'block';
 
-                // Bucle de Caos Visual
+                // Bucle de efectos rápidos
                 setInterval(() => {
-                    spawnGlitchText();
-                    updateTerminal();
-                    // Flash de fondo agresivo
+                    spawnText();
+                    updateLog();
+                    // Flash Rojo/Negro
                     kiosk.style.backgroundColor = (Math.random() > 0.5) ? "#f00" : "#000";
-                }, 50);
+                    
+                    // Efecto de inversión de pantalla aleatorio
+                    if(Math.random() > 0.9) document.body.style.filter = "invert(1)";
+                    else document.body.style.filter = "none";
+                }, 45);
 
             }, 15000); 
         });
 
-        function launchFullScreen(element) {
-            if(element.requestFullscreen) { element.requestFullscreen(); }
-            else if(element.mozRequestFullScreen) { element.mozRequestFullScreen(); }
-            else if(element.webkitRequestFullscreen) { element.webkitRequestFullscreen(); }
-            else if(element.msRequestFullscreen) { element.msRequestFullscreen(); }
-        }
-
-        function spawnGlitchText() {
+        function spawnText() {
             const t = document.createElement('div');
             t.className = 'glitch-text';
-            t.innerText = killPhrases[Math.floor(Math.random() * killPhrases.length)];
-            t.style.left = Math.random() * 80 + "vw";
+            t.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+            t.style.left = Math.random() * 70 + "vw";
             t.style.top = Math.random() * 80 + "vh";
             t.style.color = (Math.random() > 0.5) ? "#fff" : "#ff0";
             kiosk.appendChild(t);
-            setTimeout(() => t.remove(), 400);
+            setTimeout(() => t.remove(), 350);
         }
 
-        function updateTerminal() {
+        function updateLog() {
             const line = document.createElement('div');
-            line.innerText = `ERR_CORRUPT_FILE_BLOCK_${Math.random().toString(16).toUpperCase().slice(2,8)}`;
+            line.innerText = `> CORRUPTING_SECTOR_${Math.random().toString(16).toUpperCase().slice(2,10)}`;
             log.appendChild(line);
-            if(log.childNodes.length > 20) log.removeChild(log.firstChild);
+            if(log.childNodes.length > 25) log.removeChild(log.firstChild);
         }
 
-        // Bloqueo de retroceso en Android
-        history.pushState(null, null, location.href);
-        window.onpopstate = function () { history.go(1); };
+        // Bloqueo botón atrás Android
+        window.history.pushState(null, null, location.href);
+        window.onpopstate = () => window.history.go(1);
     </script>
 </body>
 </html>
